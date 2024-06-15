@@ -1,0 +1,38 @@
+const { ActivityHandler, MessageFactory } = require('botbuilder');
+
+class EchoBot extends ActivityHandler {
+    constructor() {
+        super();
+
+        this.onMessage(async (context, next) => {
+            var vID = "ab17";
+            var vDays = "5";
+            var vcText = `Perfect ${vID} You have taken ${vDays} days`;
+
+            await context.sendActivity(MessageFactory.text("Thank you, I'm looking in my database..."));
+
+            if (context.activity.text.toLowerCase() == vID) {
+                await context.sendActivity(MessageFactory.text(vcText));
+            } else {
+                await context.sendActivity(MessageFactory.text("Sorry, I have not found this ID."));
+            }
+
+            await context.sendActivity(MessageFactory.text("Type your ID"));
+            await next();
+        });
+
+        this.onMembersAdded(async (context, next) => {
+            const membersAdded = context.activity.membersAdded;
+            const welcomeText = 'Hello and welcome! Type your ID';
+
+            for (let cnt = 0; cnt < membersAdded.length; ++cnt) {
+                if (membersAdded[cnt].id !== context.activity.recipient.id) {
+                    await context.sendActivity(MessageFactory.text(welcomeText));
+                }
+            }
+            await next();
+        });
+    }
+}
+
+module.exports.EchoBot = EchoBot;
