@@ -1,0 +1,1 @@
+Dentro del paquete org.text.example.bot.myBot se encuentra el código .java que Xtext ha generado para soportar nuestro DSL. Por lo tanto, es necesario importar todos estos elementos para utilizarlos correctamente en nuestro proyecto.
