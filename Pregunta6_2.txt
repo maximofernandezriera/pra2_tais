@@ -1,0 +1,55 @@
+Podríamos implementar diálogos en el Microsoft Bot Framework, tal y como se propone en la documentación oficial, para gestionar conversaciones complejas y mantener el estado de la interacción del usuario, mejorando claramente la interactividad y escalabilidad del bot. Esto es una proción de código fuente propuesta:
+
+const { ActivityHandler, MessageFactory, DialogSet, WaterfallDialog, TextPrompt } = require('botbuilder-dialogs');
+
+class EchoBot extends ActivityHandler {
+    constructor(conversationState) {
+        super();
+        this.conversationState = conversationState;
+
+        this.dialogState = this.conversationState.createProperty('dialogState');
+        this.dialogs = new DialogSet(this.dialogState);
+        this.dialogs.add(new TextPrompt('textPrompt'));
+        this.dialogs.add(new WaterfallDialog('mainDialog', [
+            this.promptForID.bind(this),
+            this.processID.bind(this)
+        ]));
+
+        this.onMessage(async (context, next) => {
+            const dialogContext = await this.dialogs.createContext(context);
+            const results = await dialogContext.continueDialog();
+            if (results.status === 'empty') {
+                await dialogContext.beginDialog('mainDialog');
+            }
+            await next();
+        });
+
+        this.onMembersAdded(async (context, next) => {
+            const membersAdded = context.activity.membersAdded;
+            const welcomeText = 'Hello and welcome! Type your ID';
+            for (let cnt = 0; cnt < membersAdded.length; ++cnt) {
+                if (membersAdded[cnt].id !== context.activity.recipient.id) {
+                    await context.sendActivity(MessageFactory.text(welcomeText));
+                }
+            }
+            await next();
+        });
+    }
+
+    async promptForID(step) {
+        return await step.prompt('textPrompt', 'Please enter your employee ID.');
+    }
+
+    async processID(step) {
+        const userId = step.result.toLowerCase();
+        if (employees.hasOwnProperty(userId)) {
+            const daysTaken = employees[userId];
+            const replyText = `Perfect ${userId}, you have taken ${daysTaken} days`;
+            await step.context.sendActivity(MessageFactory.text(replyText));
+        } else {
+            await step.context.sendActivity(MessageFactory.text("Sorry, I have not found this ID."));
+        }
+        return await step.next();
+    }
+}
+
