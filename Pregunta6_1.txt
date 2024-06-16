@@ -1,0 +1,22 @@
+Podríamos utilizar un objeto JSON para almacenar y gestionar dinámicamente los resultados de búsqueda, facilitando la actualización y mantenimiento de datos sin modificar la lógica principal del código.Seguidamente vemos el código fuente propuesto:
+
+const employees = {
+    "ab17": 6,
+    "bc18": 11,
+    "cd19": 12
+};
+
+this.onMessage(async (context, next) => {
+    const userId = context.activity.text.toLowerCase();
+    if (employees.hasOwnProperty(userId)) {
+        const daysTaken = employees[userId];
+        const replyText = `Perfect ${userId}, you have taken ${daysTaken} days`;
+        await context.sendActivity(MessageFactory.text(replyText));
+    } else {
+        await context.sendActivity(MessageFactory.text("Sorry, I have not found this ID."));
+    }
+    await context.sendActivity(MessageFactory.text("Type your ID"));
+    await next();
+});
+
+
