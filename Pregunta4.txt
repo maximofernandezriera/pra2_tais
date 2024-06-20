@@ -1,38 +1,217 @@
-const { ActivityHandler, MessageFactory } = require('botbuilder');
+package org.xtext.example.bot.generator 
 
-class EchoBot extends ActivityHandler {
-    constructor() {
-        super();
+  
 
-        this.onMessage(async (context, next) => {
-            var vID = "ab17";
-            var vDays = "5";
-            var vcText = `Perfect ${vID} You have taken ${vDays} days`;
+import org.eclipse.emf.ecore.resource.Resource 
 
-            await context.sendActivity(MessageFactory.text("Thank you, I'm looking in my database..."));
+import org.eclipse.xtext.generator.AbstractGenerator 
 
-            if (context.activity.text.toLowerCase() == vID) {
-                await context.sendActivity(MessageFactory.text(vcText));
-            } else {
-                await context.sendActivity(MessageFactory.text("Sorry, I have not found this ID."));
-            }
+import org.eclipse.xtext.generator.IFileSystemAccess2 
 
-            await context.sendActivity(MessageFactory.text("Type your ID"));
-            await next();
-        });
+import org.eclipse.xtext.generator.IGeneratorContext 
 
-        this.onMembersAdded(async (context, next) => {
-            const membersAdded = context.activity.membersAdded;
-            const welcomeText = 'Hello and welcome! Type your ID';
+  
 
-            for (let cnt = 0; cnt < membersAdded.length; ++cnt) {
-                if (membersAdded[cnt].id !== context.activity.recipient.id) {
-                    await context.sendActivity(MessageFactory.text(welcomeText));
-                }
-            }
-            await next();
-        });
-    }
-}
+import org.xtext.example.bot.myBot.Bot 
 
-module.exports.EchoBot = EchoBot;
+import org.xtext.example.bot.myBot.State 
+
+import org.xtext.example.bot.myBot.Elements 
+
+import org.xtext.example.bot.myBot.IDEmployeeElement 
+
+import org.xtext.example.bot.myBot.DaysTakenElement 
+
+import org.xtext.example.bot.myBot.ActionSay 
+
+  
+
+class MyBotGenerator extends AbstractGenerator { 
+
+  
+
+    override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) { 
+
+        fsa.generateFile(className(resource) + ".js", toJavaCode(resource.contents.head as Bot)) 
+
+    } 
+
+  
+
+    def className(Resource res) { 
+
+        var name = res.URI.lastSegment 
+
+        return name.substring(0, name.indexOf('.')) 
+
+    } 
+
+  
+
+    def toJavaCode(Bot sm) ''' 
+
+const { ActivityHandler, MessageFactory } = require('botbuilder'); 
+
+  
+
+class EchoBot extends ActivityHandler { 
+
+    constructor() { 
+
+        super(); 
+
+        this.onMessage(async (context, next) => { 
+
+            // *** Aquí comienza el bucle FOR (Pregunta 4.1) *** 
+
+            var indice = 0; 
+
+            ${generateElements(sm.element)} 
+
+            indice = indice + 1; 
+
+            // *** Aquí termina el bucle FOR (Pregunta 4.1) *** 
+
+            await next(); 
+
+        }); 
+
+  
+
+        // *** Aquí comienza el código de la función this.onMembersAdded (Pregunta 4.4) *** 
+
+        this.onMembersAdded(async (context, next) => { 
+
+            const membersAdded = context.activity.membersAdded; 
+
+            const welcomeText = 'Hello and welcome! Type your ID'; 
+
+            for (let cnt = 0; cnt < membersAdded.length; ++cnt) { 
+
+                if (membersAdded[cnt].id !== context.activity.recipient.id) { 
+
+                    await context.sendActivity(MessageFactory.text(welcomeText, welcomeText)); 
+
+                } 
+
+            } 
+
+            await next(); 
+
+        }); 
+
+        // *** Aquí termina el código de la función this.onMembersAdded (Pregunta 4.4) *** 
+
+  
+
+    } 
+
+} 
+
+  
+
+// *** Aquí comienza el cierre de la función principal (Pregunta 4.4) *** 
+
+module.exports.EchoBot = EchoBot; 
+
+// *** Aquí termina el cierre de la función principal (Pregunta 4.4) *** 
+
+''' 
+
+  
+
+    def generateElements(List<Elements> elements) ''' 
+
+var indice = 0; 
+
+${elements.map[generateElement(it)]} 
+
+indice = indice + 1; 
+
+''' 
+
+  
+
+    def generateElement(Elements element) ''' 
+
+var vID = "${element.idEmployeeElement.name}"; 
+
+var vDays = "${element.daysTakenElement.name}"; 
+
+var vcText = "Perfect " + vID + " You have taken " + vDays + " days"; 
+
+context.sendActivity(MessageFactory.text("Thank you, I'm looking in my database...")); 
+
+''' 
+
+  
+
+    def generateStates(List<State> states) ''' 
+
+${states.map[generateState(it)]} 
+
+''' 
+
+  
+
+    // *** Aquí comienza el código para la Pregunta 4.2 *** 
+
+    def generateState(State state) ''' 
+
+${state.actionSay.map[generateCode(it)].join("\n")} 
+
+''' 
+
+  
+
+    def generateCode(ActionSay action) ''' 
+
+context.sendActivity(MessageFactory.text("${action.text}")); 
+
+''' 
+
+    // *** Aquí termina el código para la Pregunta 4.2 *** 
+
+  
+
+    def generateIfElse(List<Elements> elements) ''' 
+
+${elements.map[generateIfStatement(it)].join("\n")} 
+
+''' 
+
+  
+
+    // *** Aquí comienza el código para la Pregunta 4.3 *** 
+
+    def generateIfStatement(Elements element) ''' 
+
+var vID = "${element.idEmployeeElement.name}"; 
+
+var vDays = "${element.daysTakenElement.name}"; 
+
+var vcText = "Perfect " + vID + " You have taken " + vDays + " days"; 
+
+context.sendActivity(MessageFactory.text("Thank you, I'm looking in my database...")); 
+
+  
+
+if (context.activity.text.toLowerCase() == vID.toLowerCase()) { 
+
+    await context.sendActivity(MessageFactory.text(vcText)); 
+
+} else { 
+
+    await context.sendActivity(MessageFactory.text("Sorry, I have not found this ID.")); 
+
+} 
+
+await context.sendActivity(MessageFactory.text("Type your ID")); 
+
+''' 
+
+    // *** Aquí termina el código para la Pregunta 4.3 *** 
+
+  
+
+} 
